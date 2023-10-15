@@ -6,6 +6,10 @@ license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[example]]
+name = "document"
+path = "examples/document.rs"
+
 [dependencies]
 pest = "2.7.4"
 pest_derive = "2.7.4"
