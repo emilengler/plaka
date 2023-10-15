@@ -1,0 +1,14 @@
+NL           = _{ "\n" }
+Document     =  { (Item | NL)+ }
+Item         =  { KeywordLine ~ Object? }
+KeywordLine  =  { Keyword ~ (WS ~ Argument)* ~ NL }
+Keyword      =  { KeywordStart ~ KeywordChar* }
+KeywordStart = _{ ASCII_ALPHANUMERIC }
+KeywordChar  = _{ KeywordStart | "-" }
+Argument     =  { ArgumentChar+ }
+ArgumentChar = _{ '\x21'..'\x7E' }
+WS           = _{ " " | "\t" }
+Object       =  { BeginLine ~ Base64 ~ EndLine }
+BeginLine    =  { "-----BEGIN " ~ Keyword ~ (" " ~ Keyword)* ~ "-----" ~ NL }
+EndLine      =  { "-----END " ~ Keyword ~ (" " ~ Keyword)* ~ "-----" ~ NL }
+Base64       =  { (ASCII_ALPHANUMERIC | "+" | "/" | "=" | "\n")+ }
