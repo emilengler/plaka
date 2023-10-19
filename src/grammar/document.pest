@@ -7,8 +7,8 @@ KeywordStart = _{ ASCII_ALPHANUMERIC }
 KeywordChar  = _{ KeywordStart | "-" }
 Argument     =  { ArgumentChar+ }
 ArgumentChar = _{ '\x21'..'\x7E' }
-WS           = _{ " " | "\t" }
+WS           = _{ (" " | "\t")+ }
 Object       =  { BeginLine ~ Base64 ~ EndLine }
 BeginLine    =  { "-----BEGIN " ~ Keyword ~ (" " ~ Keyword)* ~ "-----" ~ NL }
 EndLine      =  { "-----END " ~ Keyword ~ (" " ~ Keyword)* ~ "-----" ~ NL }
-Base64       =  { (ASCII_ALPHANUMERIC | "+" | "/" | "=" | "\n")+ }
+Base64       =  { (ASCII_ALPHANUMERIC | "+" | "/" | "=" | NL)+ }
