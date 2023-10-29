@@ -2,8 +2,7 @@
 
 use std::{fs::File, io::Read};
 
-use pest::Parser;
-use plaka::Document;
+use plaka::document::Document;
 
 fn main() {
     let mut f = File::open("./examples/data/consensus").unwrap();
