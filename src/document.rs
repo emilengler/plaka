@@ -56,7 +56,7 @@ impl Document {
     }
 
     /// Evaluates the AST of a `Document` into the internal representation
-    pub fn parse_token(document: Pair<'_, Rule>) -> Result<Self, Error> {
+    fn parse_token(document: Pair<'_, Rule>) -> Result<Self, Error> {
         debug_assert_eq!(document.as_rule(), Rule::Document);
 
         // Evaluate each and every `Item`
@@ -72,7 +72,7 @@ impl Document {
 
 impl Item {
     /// Evaluates the AST of an `Item` into the internal representation
-    pub fn parse_token(item: Pair<'_, Rule>) -> Result<Self, Error> {
+    fn parse_token(item: Pair<'_, Rule>) -> Result<Self, Error> {
         debug_assert_eq!(item.as_rule(), Rule::Item);
 
         let mut keyword = String::new();
