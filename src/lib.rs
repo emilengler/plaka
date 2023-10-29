@@ -18,6 +18,8 @@ pub struct Item {
 
 #[derive(Debug, Error)]
 pub enum Error {
+    #[error("invalid base64 in object")]
+    InvalidBase64,
     #[error("the parser failed")]
     PestFailure,
     #[error("unknown parsing error occurred")]
@@ -31,23 +33,24 @@ impl Document {
             Err(_) => return Err(Error::PestFailure),
         };
 
-        Ok(Self::parse_token(token.next().unwrap()))
+        Self::parse_token(token.next().unwrap())
     }
 
-    pub fn parse_token(document: Pair<'_, Rule>) -> Self {
+    pub fn parse_token(document: Pair<'_, Rule>) -> Result<Self, Error> {
         debug_assert_eq!(document.as_rule(), Rule::Document);
 
-        let items: Vec<Item> = document
+        let items: Result<Vec<Item>, Error> = document
             .into_inner()
             .map(|item| Item::parse_token(item))
             .collect();
+        let items = items?;
 
-        Self { items }
+        Ok(Self { items })
     }
 }
 
 impl Item {
-    pub fn parse_token(item: Pair<'_, Rule>) -> Self {
+    pub fn parse_token(item: Pair<'_, Rule>) -> Result<Self, Error> {
         debug_assert_eq!(item.as_rule(), Rule::Item);
 
         let mut keyword = String::new();
@@ -56,28 +59,28 @@ impl Item {
 
         for element in item.into_inner() {
             match element.as_rule() {
-                Rule::KeywordLine => (keyword, arguments) = Self::parse_keyword_line(element),
-                Rule::Object => object = Some(Self::parse_object(element)),
+                Rule::KeywordLine => (keyword, arguments) = Self::parse_keyword_line(element)?,
+                Rule::Object => object = Some(Self::parse_object(element)?),
                 _ => panic!("unknown element in item"),
             }
         }
 
-        Self {
+        Ok(Self {
             keyword,
             arguments,
             object,
-        }
+        })
     }
 
-    fn parse_keyword_line(keyword_line: Pair<'_, Rule>) -> (String, Vec<String>) {
+    fn parse_keyword_line(keyword_line: Pair<'_, Rule>) -> Result<(String, Vec<String>), Error> {
         let mut kl = keyword_line.into_inner();
         let keyword: String = kl.next().unwrap().as_str().into();
         let arguments: Vec<String> = kl.map(|argument| argument.as_str().into()).collect();
 
-        (keyword, arguments)
+        Ok((keyword, arguments))
     }
 
-    fn parse_object(object: Pair<'_, Rule>) -> Vec<u8> {
+    fn parse_object(object: Pair<'_, Rule>) -> Result<Vec<u8>, Error> {
         let b64: Vec<Pair<'_, Rule>> = object
             .into_inner()
             .filter(|element| element.as_rule() == Rule::Base64)
@@ -85,9 +88,9 @@ impl Item {
         debug_assert_eq!(b64.len(), 1);
         let b64: String = b64[0].as_str().into();
 
-        // TODO: Be more graceful here
-        base64::engine::general_purpose::STANDARD
-            .decode(b64.replace("\n", ""))
-            .unwrap()
+        match base64::engine::general_purpose::STANDARD.decode(b64.replace("\n", "")) {
+            Ok(bytes) => Ok(bytes),
+            Err(_) => Err(Error::InvalidBase64),
+        }
     }
 }
